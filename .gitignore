@@ -28,4 +28,5 @@ atlassian-ide-plugin.xml
 build/
 dist/
 
+/androidmanifest-changer
 /.tmp

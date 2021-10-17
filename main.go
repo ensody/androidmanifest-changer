@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"google.golang.org/protobuf/proto"
@@ -26,11 +27,13 @@ const (
 type Config struct {
 	versionCode int32
 	versionName string
+	packageName string
 }
 
 func main() {
 	versionCode := flag.Uint("versionCode", 0, "The versionCode to set")
 	versionName := flag.String("versionName", "", "The versionName to set")
+	packageName := flag.String("packageName", "", "The packageName to set")
 	flag.Parse()
 	if len(flag.Args()) != 1 {
 		fmt.Fprintln(flag.CommandLine.Output(), "Error: File path is required.")
@@ -40,14 +43,15 @@ func main() {
 	config := &Config{
 		versionCode: int32(*versionCode),
 		versionName: *versionName,
+		packageName: *packageName,
 	}
 
 	path := flag.Arg(0)
 
 	if strings.HasSuffix(path, ".apk") {
 		updateApk(path, config)
-	} else if strings.HasSuffix(path, ".aar") {
-		updateAar(path, config)
+	} else if strings.HasSuffix(path, ".aab") {
+		updateAab(path, config)
 	} else {
 		updateManifest(path, config)
 	}
@@ -65,7 +69,7 @@ func updateApk(path string, config *Config) {
 		log.Fatalln("Failed executing aapt2:", err, string(out))
 	}
 
-	updateAar(file.Name(), config)
+	updateManifestPbInZip(file.Name(), "AndroidManifest.xml", config)
 
 	out, err = exec.Command("aapt2", "convert", "-o", path, "--output-format", "binary", file.Name()).CombinedOutput()
 	if err != nil {
@@ -73,16 +77,20 @@ func updateApk(path string, config *Config) {
 	}
 }
 
-func updateAar(path string, config *Config) {
+func updateAab(path string, config *Config) {
+	updateManifestPbInZip(path, "base/manifest/AndroidManifest.xml", config)
+}
+
+func updateManifestPbInZip(path string, manifestPath string, config *Config) {
 	manifest, err := ioutil.TempFile(tmpDir, "AndroidManifest.*.xml")
 	if err != nil {
 		log.Fatalln("Failed creating temp file:", err)
 	}
 	defer os.Remove(manifest.Name())
 
-	extractFromZip(path, "AndroidManifest.xml", manifest)
+	extractFromZip(path, manifestPath, manifest)
 	updateManifest(manifest.Name(), config)
-	addToZip(path, "AndroidManifest.xml", manifest)
+	addToZip(path, manifestPath, manifest)
 }
 
 func addToZip(zipPath string, name string, source *os.File) {
@@ -92,7 +100,9 @@ func addToZip(zipPath string, name string, source *os.File) {
 	}
 	defer os.RemoveAll(manifestDir)
 
-	f, err := os.Create(path.Join(manifestDir, "AndroidManifest.xml"))
+	tmpPath := path.Join(manifestDir, name)
+	os.MkdirAll(path.Dir(tmpPath), 0600)
+	f, err := os.Create(tmpPath)
 	if err != nil {
 		log.Fatalln("Failed opening file:", err)
 	}
@@ -100,7 +110,13 @@ func addToZip(zipPath string, name string, source *os.File) {
 	source.Seek(0, 0)
 	io.Copy(f, source)
 
-	out, err := exec.Command("zip", "-j", zipPath, f.Name()).CombinedOutput()
+	absZipPath, err := filepath.Abs(zipPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	cmd := exec.Command("zip", absZipPath, name)
+	cmd.Dir = manifestDir
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatalln("Failed executing zip:", err, string(out))
 	}
@@ -144,11 +160,18 @@ func updateManifest(path string, config *Config) {
 	if err != nil {
 		log.Fatalln("Error reading file:", err)
 	}
+
 	xmlNode := &XmlNode{}
 	if err := proto.Unmarshal(in, xmlNode); err != nil {
 		log.Fatalln("Failed to parse manifest:", err)
 	}
 	for _, attr := range xmlNode.GetElement().GetAttribute() {
+		if attr.GetNamespaceUri() == "" && attr.GetName() == "package" {
+			if config.packageName != "" {
+				fmt.Println("Changing packageName from", attr.Value, "to", config.packageName)
+				attr.Value = config.packageName
+			}
+		}
 		if attr.GetNamespaceUri() != namespace {
 			continue
 		}
@@ -160,6 +183,10 @@ func updateManifest(path string, config *Config) {
 					fmt.Println("Changing versionCode from", x.IntDecimalValue, "to", config.versionCode)
 					x.IntDecimalValue = int32(config.versionCode)
 				}
+				// In AABs the value exists, but when using aapt2 to convert the binary manifest the value is gone
+				if attr.Value != "" {
+					attr.Value = fmt.Sprint(config.versionCode)
+				}
 			}
 		case versionNameAttr:
 			if config.versionName != "" {
@@ -169,11 +196,13 @@ func updateManifest(path string, config *Config) {
 		}
 	}
 
-	out, err := proto.Marshal(xmlNode)
+	// We use MarshalVT because it keeps the correct field ordering.
+	// With the standard Marshal function, Android Studio can't read the resulting proto file inside aab files. :-/
+	out, err := xmlNode.MarshalVT()
 	if err != nil {
 		log.Fatalln("Error marshalling XML:", err)
 	}
-	if err := ioutil.WriteFile(path, out, 0644); err != nil {
+	if err := ioutil.WriteFile(path, out, 0600); err != nil {
 		log.Fatalln("Error writing file:", err)
 	}
 }
