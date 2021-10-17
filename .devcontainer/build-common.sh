@@ -8,6 +8,6 @@ source "$DIR/utils.sh"
 mkdir -p ~/bin
 
 # Install goreleaser
-download_tgz https://github.com/goreleaser/goreleaser/releases/download/v0.174.2/goreleaser_Linux_x86_64.tar.gz \
-  38155642fb10a75205f20e390474f3bad9fbf61f2614500b02b179d05907348e ~/bin \
+download_tgz https://github.com/goreleaser/goreleaser/releases/download/v0.182.1/goreleaser_Linux_x86_64.tar.gz \
+  bb0b3a96bb38ba86fb3f363d303ce6079c04ada2797a892bed2e2a61ad41daf2 ~/bin \
   goreleaser
