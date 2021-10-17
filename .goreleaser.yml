@@ -1,0 +1,54 @@
+project_name: androidmanifest-changer
+before:
+  hooks:
+    - go mod download
+    - go generate ./...
+env:
+  - CGO_ENABLED=0
+builds:
+  - id: windows
+    goos:
+      - windows
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
+  - id: unix
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - 7
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
+archives:
+  - id: windows
+    builds:
+      - windows
+    format: zip
+    replacements:
+      windows: Windows
+      amd64: x86_64
+  - id: unix
+    builds:
+      - unix
+    replacements:
+      darwin: macOS
+      linux: Linux
+      amd64: x86_64
+snapshot:
+  name_template: "{{ .Tag }}-next"
+release:
+  draft: true
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - Merge pull request
+      - Merge branch
