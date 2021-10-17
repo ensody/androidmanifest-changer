@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 
 	"google.golang.org/protobuf/proto"
@@ -84,66 +85,25 @@ func updateAar(path string, config *Config) {
 	addToZip(path, "AndroidManifest.xml", manifest)
 }
 
-func addToZip(path string, name string, source *os.File) {
-	zipReader, err := zip.OpenReader(path)
+func addToZip(zipPath string, name string, source *os.File) {
+	manifestDir, err := ioutil.TempDir(tmpDir, "*")
 	if err != nil {
-		log.Fatalln("Failed reading zip:", err)
+		log.Fatalln("Failed creating temp dir:", err)
 	}
-	defer zipReader.Close()
+	defer os.RemoveAll(manifestDir)
 
-	tmpZip, err := ioutil.TempFile(tmpDir, "*.aar")
-	if err != nil {
-		log.Fatalln("Failed creating temp file:", err)
-	}
-	defer os.Remove(tmpZip.Name())
-
-	targetZipWriter := zip.NewWriter(tmpZip)
-	defer targetZipWriter.Close()
-
-	for _, zipItem := range zipReader.File {
-		header, err := zip.FileInfoHeader(zipItem.FileInfo())
-		if err != nil {
-			log.Fatalln("Failed creating header:", err)
-		}
-		header.Name = zipItem.Name
-		targetItem, err := targetZipWriter.CreateHeader(header)
-		if err != nil {
-			log.Fatalln("Failed creating header:", err)
-		}
-		if zipItem.Name == name {
-			source.Seek(0, 0)
-			_, err = io.Copy(targetItem, source)
-			if err != nil {
-				log.Fatalln("Failed copying to zip:", err)
-			}
-		} else {
-			zipItemReader, err := zipItem.Open()
-			if err != nil {
-				log.Fatalln("Failed reading zip:", err)
-			}
-			_, err = io.Copy(targetItem, zipItemReader)
-			if err != nil {
-				log.Fatalln("Failed copying to zip:", err)
-			}
-			zipItemReader.Close()
-		}
-	}
-
-	f, err := os.Create(path)
+	f, err := os.Create(path.Join(manifestDir, "AndroidManifest.xml"))
 	if err != nil {
 		log.Fatalln("Failed opening file:", err)
 	}
 	defer f.Close()
-	tmpZip.Seek(0, 0)
-	io.Copy(f, tmpZip)
+	source.Seek(0, 0)
+	io.Copy(f, source)
 
-	f2, err := os.Create("fafa.zip")
+	out, err := exec.Command("zip", "-j", zipPath, f.Name()).CombinedOutput()
 	if err != nil {
-		log.Fatalln("Failed opening file:", err)
+		log.Fatalln("Failed executing zip:", err, string(out))
 	}
-	defer f2.Close()
-	tmpZip.Seek(0, 0)
-	io.Copy(f2, tmpZip)
 }
 
 func extractFromZip(path string, name string, target *os.File) {
@@ -195,14 +155,15 @@ func updateManifest(path string, config *Config) {
 		switch attr.GetName() {
 		case versionCodeAttr:
 			if config.versionCode > 0 {
-				println(attr.String())
 				prim := attr.GetCompiledItem().GetPrim()
 				if x, ok := prim.GetOneofValue().(*Primitive_IntDecimalValue); ok {
+					fmt.Println("Changing versionCode from", x.IntDecimalValue, "to", config.versionCode)
 					x.IntDecimalValue = int32(config.versionCode)
 				}
 			}
 		case versionNameAttr:
 			if config.versionName != "" {
+				fmt.Println("Changing versionName from", attr.Value, "to", config.versionName)
 				attr.Value = config.versionName
 			}
 		}
