@@ -33,7 +33,7 @@ type Config struct {
 func main() {
 	versionCode := flag.Uint("versionCode", 0, "The versionCode to set")
 	versionName := flag.String("versionName", "", "The versionName to set")
-	packageName := flag.String("packageName", "", "The packageName to set")
+	packageName := flag.String("package", "", "The package to set")
 	flag.Parse()
 	if len(flag.Args()) != 1 {
 		fmt.Fprintln(flag.CommandLine.Output(), "Error: File path is required.")
