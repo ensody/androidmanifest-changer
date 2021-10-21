@@ -1,6 +1,6 @@
 # androidmanifest-changer
 
-This is a tool for manipulating the AndroidManifest.xml within Android apps. Both, AAB (Bundles) and APK files are support.
+Change Android AAB/APK attributes like the versionCode and versionName. This tool modified the binary AndroidManifest.xml within AAB (Bundles) and APK files.
 
 ## Supported attributes
 
