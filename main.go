@@ -101,7 +101,7 @@ func addToZip(zipPath string, name string, source *os.File) {
 	defer os.RemoveAll(manifestDir)
 
 	tmpPath := path.Join(manifestDir, name)
-	os.MkdirAll(path.Dir(tmpPath), 0600)
+	os.MkdirAll(path.Dir(tmpPath), 0700)
 	f, err := os.Create(tmpPath)
 	if err != nil {
 		log.Fatalln("Failed opening file:", err)
