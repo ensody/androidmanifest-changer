@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"google.golang.org/protobuf/proto"
@@ -28,12 +29,14 @@ type Config struct {
 	versionCode int32
 	versionName string
 	packageName string
+	minSdkVersion int
 }
 
 func main() {
 	versionCode := flag.Uint("versionCode", 0, "The versionCode to set")
 	versionName := flag.String("versionName", "", "The versionName to set")
 	packageName := flag.String("package", "", "The package to set")
+	minSdkVersion := flag.Int("minSdkVersion", 0, "The minSdkVersion to set")
 	flag.Parse()
 	if len(flag.Args()) != 1 {
 		fmt.Fprintln(flag.CommandLine.Output(), "Error: File path is required.")
@@ -44,6 +47,7 @@ func main() {
 		versionCode: int32(*versionCode),
 		versionName: *versionName,
 		packageName: *packageName,
+		minSdkVersion: *minSdkVersion,
 	}
 
 	path := flag.Arg(0)
@@ -164,6 +168,24 @@ func updateManifest(path string, config *Config) {
 	xmlNode := &XmlNode{}
 	if err := proto.Unmarshal(in, xmlNode); err != nil {
 		log.Fatalln("Failed to parse manifest:", err)
+	}
+	for _, node := range xmlNode.GetElement().GetChild() {
+		if elem, ok := node.GetNode().(*XmlNode_Element); ok {
+			element := elem.Element
+			if element.GetName() == "uses-sdk" {
+				for _, attr := range element.GetAttribute() {
+					if attr.GetNamespaceUri() == "http://schemas.android.com/apk/res/android" {
+						switch attr.GetName() {
+						case "minSdkVersion":
+							if config.minSdkVersion > 0 {
+								fmt.Println("Changing minSdkVersion from", attr.Value, "to", config.minSdkVersion)
+								attr.Value = strconv.Itoa(config.minSdkVersion)
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	for _, attr := range xmlNode.GetElement().GetAttribute() {
 		if attr.GetNamespaceUri() == "" && attr.GetName() == "package" {
