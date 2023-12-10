@@ -14,6 +14,14 @@ Change Android AAB/APK attributes like the versionCode and versionName. This too
    - See https://developer.android.com/guide/topics/manifest/uses-sdk-element for more information.
 
 
+**targetSdkVersion**
+   - Influences the runtime behavior of the app's native code.
+   - System applies behavior changes to apps with targetSdkVersion at or above the OS version introducing these changes.
+   - New apps should target the latest version; existing apps should update when feasible.
+   - Retrieve the targetSdkVersion at runtime with android_get_application_target_sdk_version() in API level 24 and later.
+   - See https://developer.android.com/ndk/guides/sdk-versions for more information.
+
+
 **versionCode**
    - A positive integer that serves as the internal version number of the app.
    - Used to differentiate between newer and older versions, with higher numbers indicating more recent versions.
@@ -41,14 +49,6 @@ Change Android AAB/APK attributes like the versionCode and versionName. This too
 
 
 ## Coming soon
-
-**targetSdkVersion**
-   - Influences the runtime behavior of the app's native code.
-   - System applies behavior changes to apps with targetSdkVersion at or above the OS version introducing these changes.
-   - New apps should target the latest version; existing apps should update when feasible.
-   - Retrieve the targetSdkVersion at runtime with android_get_application_target_sdk_version() in API level 24 and later.
-   - See https://developer.android.com/ndk/guides/sdk-versions for more information.
-
 
 **compileSdkVersion**
    - This property doesn't impact NDK builds as API availability for NDK is determined by minSdkVersion.
