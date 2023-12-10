@@ -30,6 +30,7 @@ type Config struct {
 	versionName string
 	packageName string
 	minSdkVersion int
+	targetSdkVersion int
 }
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 	versionName := flag.String("versionName", "", "The versionName to set")
 	packageName := flag.String("package", "", "The package to set")
 	minSdkVersion := flag.Int("minSdkVersion", 0, "The minSdkVersion to set")
+	targetSdkVersion := flag.Int("targetSdkVersion", 0, "The targetSdkVersion to set")
 	flag.Parse()
 	if len(flag.Args()) != 1 {
 		fmt.Fprintln(flag.CommandLine.Output(), "Error: File path is required.")
@@ -48,6 +50,7 @@ func main() {
 		versionName: *versionName,
 		packageName: *packageName,
 		minSdkVersion: *minSdkVersion,
+		targetSdkVersion: *targetSdkVersion,
 	}
 
 	path := flag.Arg(0)
@@ -180,6 +183,11 @@ func updateManifest(path string, config *Config) {
 							if config.minSdkVersion > 0 {
 								fmt.Println("Changing minSdkVersion from", attr.Value, "to", config.minSdkVersion)
 								attr.Value = strconv.Itoa(config.minSdkVersion)
+							}
+						case "targetSdkVersion":
+							if config.targetSdkVersion > 0 {
+								fmt.Println("Changing targetSdkVersion from", attr.Value, "to", config.targetSdkVersion)
+								attr.Value = strconv.Itoa(config.targetSdkVersion)
 							}
 						}
 					}
