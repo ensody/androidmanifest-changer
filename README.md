@@ -51,9 +51,10 @@ Change Android AAB/APK attributes like the versionCode and versionName. This too
 
 
 **compileSdkVersion**
-   - Determines the API availability for NDK builds, independent of the compileSdkVersion property.
-   - Governed by minSdkVersion, as C++ symbols are resolved at library load time.
-   - Recommended to use the newest version for new apps and update existing apps as needed.
+   - This property doesn't impact NDK builds as API availability for NDK is determined by minSdkVersion.
+   - In NDK, C++ symbols are resolved at library load time, unlike the lazy resolution in Java.
+   - Utilizing symbols not present in the minSdkVersion can lead to library loading failures on OS versions lacking the newer API.
+   - Recommended approach for new apps is to use the latest available version. For existing apps, update to the latest version as per development needs.
    - See https://developer.android.com/ndk/guides/sdk-versions for more information.
 
 
