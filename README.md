@@ -4,6 +4,7 @@ Change Android AAB/APK attributes like the versionCode and versionName. This too
 
 ## Supported attributes
 
+* minSdkVersion
 * versionCode
 * versionName
 * package
@@ -16,6 +17,7 @@ androidmanifest-changer --versionCode 4 app.aab
 
 # Change multiple values
 androidmanifest-changer \
+  --minSdkVersion 33 \
   --versionCode 4 \
   --versionName 1.0.2 \
   --package com.some.app \
