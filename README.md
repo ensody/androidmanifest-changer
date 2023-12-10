@@ -6,21 +6,13 @@ Change Android AAB/APK attributes like the versionCode and versionName. This too
 ## Supported Attributes
 
 **minSdkVersion**
-   - The minSdkVersion set in your build.gradle file determines which APIs are available at build time (see compileSdkVersion to understand why this differs from Java builds), and determines the minimum version of the OS that your code will be compatible with.
-   - The minSdkVersion is used by the NDK to determine what features may be used when compiling your code.
-   - For example, this property determines which FORTIFY features are used in libc, and may also enable performance or size improvements (such as GNU hashes or RELR) for your binaries that are not compatible with older versions of Android.
-   - Even if you do not use any new APIs, this property still governs the minimum supported OS version of your code.
-   - Warning: Your app might work on older devices even if your native libraries are built with a newer minSdkVersion.
-   - Do not rely on this behavior. It is not guaranteed to work, and may not on other NDK versions, OS versions, or individual devices.
-   - For a new app, see the user distribution data in Android Studio's New Project Wizard or on apilevels.com.
-   - Choose your balance between potential market share and maintenance costs.
-   - The lower your minSdkVersion, the more time you'll spend working around old bugs and adding fallback behaviors for features that weren't implemented yet.
-   - For an existing app, raise your minSdkVersion whenever old API levels are no longer worth the maintenance costs, or lower it if your users demand it and it's worth the new maintenance costs.
-   - The Play console has metrics specific to your app's user distribution.
-   - Note: The NDK has its own minSdkVersion defined in <NDK>/meta/platforms.json. This is the lowest API level supported by the NDK. Do not set your app's minSdkVersion lower than this.
-   - Play may allow your app to be installed on older devices, but your NDK code may not work.
-   - The minSdkVersion of your application is made available to the preprocessor via the __ANDROID_MIN_SDK_VERSION__ macro (the legacy __ANDROID_API__ is identical, but prefer the former because its meaning is clearer).
-   - This macro is defined automatically by Clang, so no header needs to be included to use it. For NDK builds, this macro is always defined.
+   - An integer designating the minimum API level required for the application to run. 
+   - The Android system prevents the user from installing the application if the system's API level is lower than the value specified in this attribute. 
+   - Always declare this attribute.
+   - Caution: If you don't declare this attribute, the system assumes a default value of "1", which indicates that your application is compatible with all versions of Android. 
+   - If it isn't, and you didn't declare the proper minSdkVersion, then when installed on a system with an incompatible API level, the application crashes during runtime when attempting to access the unavailable APIs.
+   - For this reason, be certain to declare the appropriate API level in the minSdkVersion attribute.
+   - See https://developer.android.com/guide/topics/manifest/uses-sdk-element for more information.
 
 **versionCode**
    - A positive integer used as an internal version number.
@@ -37,11 +29,13 @@ Change Android AAB/APK attributes like the versionCode and versionName. This too
    - Typically, you release the first version of your app with versionCode set to 1, then monotonically increase the value with each release, regardless of whether the release constitutes a major or minor release.
    - This means that the versionCode value doesn't necessarily resemble the app release version that is visible to the user.
    - Apps and publishing services shouldn't display this version value to users.
+   - See https://developer.android.com/studio/publish/versioning for more information.
 
 **versionName**
    - A string used as the version number shown to users. This setting can be specified as a raw string or as a reference to a string resource.
    - The value is a string so that you can describe the app version as a <major>.<minor>.<point> string or as any other type of absolute or relative version identifier.
    - The versionName is the only value displayed to users.
+   - See https://developer.android.com/studio/publish/versioning for more information.
 
 **package**
    - The value of the package attribute in the APK's manifest file represents your app's universally unique application ID.
@@ -51,6 +45,7 @@ Change Android AAB/APK attributes like the versionCode and versionName. This too
    - Users of the previous version of your app don't receive an update and can't transfer their data between the old and new versions.
    - In the Gradle-based build system, starting with AGP 7.3, don't set the package value in the source manifest file directly.
    - For more information, see Set the application ID.
+   - See https://developer.android.com/guide/topics/manifest/manifest-element for more information.
 
 
 ## Coming soon
@@ -88,16 +83,19 @@ int android_get_application_target_sdk_version() __INTRODUCED_IN(24);
  */
 int android_get_device_api_level();
 ```
+   - See https://developer.android.com/ndk/guides/sdk-versions for more information.
 
 **compileSdkVersion**
    - This property has no effect on NDK builds. API availability for the NDK is instead governed by minSdkVersion.
    - This is because C++ symbols are eagerly resolved at library load time rather than lazily resolved when first called (as they are in Java).
    - Using any symbols that are not available in the minSdkVersion will cause the library to fail to load on OS versions that do not have the newer API, regardless of whether or not those APIs will be called.
    - For a new app, choose the newest version available. For an existing app, update this to the latest version when convenient.
+   - See https://developer.android.com/ndk/guides/sdk-versions for more information.
 
 **compileSdkVersionCodename**
    - The development codename (ex. "S", "REL") of the framework against which the application claims to have been compiled, or null if not specified.
    - This property is the compile-time equivalent of Build.VERSION.CODENAME.
+   - See https://developer.android.com/reference/android/content/pm/ApplicationInfo#compileSdkVersionCodename for more information.
 
 **platformBuildVersionCode**
 
