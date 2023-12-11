@@ -76,7 +76,7 @@ Change Android AAB/APK attributes like the versionCode and versionName. This too
 
 ```bash
 # Use the following order for entering attribute names, values, and the file name:
-   $ ./androidmanifest-changer [attribute] [value] [file_name]
+   $ ./androidmanifest-changer [attribute-flag] [value] [file_name]
    Example: $ ./androidmanifest-changer -minSdkVersion 30 app.aab
    Flags should precede the file name, and multiple flags can be used in a single command.
 
