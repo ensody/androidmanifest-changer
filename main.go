@@ -36,7 +36,7 @@ type Config struct {
 func main() {
 	versionCode := flag.Uint("versionCode", 0, "The versionCode to set")
 	versionName := flag.String("versionName", "", "The versionName to set")
-	packageName := flag.String("package", "", "The package to set")
+	packageName := flag.String("package", "", "The package name to set")
 	minSdkVersion := flag.Uint("minSdkVersion", 0, "The minSdkVersion to set")
 	targetSdkVersion := flag.Uint("targetSdkVersion", 0, "The targetSdkVersion to set")
 	flag.Parse()
@@ -198,7 +198,7 @@ func updateManifest(path string, config *Config) {
 	for _, attr := range xmlNode.GetElement().GetAttribute() {
 		if attr.GetNamespaceUri() == "" && attr.GetName() == "package" {
 			if config.packageName != "" {
-				fmt.Println("Changing packageName from", attr.Value, "to", config.packageName)
+				fmt.Println("Changing package name from", attr.Value, "to", config.packageName)
 				attr.Value = config.packageName
 			}
 		}
