@@ -29,16 +29,16 @@ type Config struct {
 	versionCode int32
 	versionName string
 	packageName string
-	minSdkVersion int
-	targetSdkVersion int
+	minSdkVersion int32
+	targetSdkVersion int32
 }
 
 func main() {
 	versionCode := flag.Uint("versionCode", 0, "The versionCode to set")
 	versionName := flag.String("versionName", "", "The versionName to set")
 	packageName := flag.String("package", "", "The package to set")
-	minSdkVersion := flag.Int("minSdkVersion", 0, "The minSdkVersion to set")
-	targetSdkVersion := flag.Int("targetSdkVersion", 0, "The targetSdkVersion to set")
+	minSdkVersion := flag.Uint("minSdkVersion", 0, "The minSdkVersion to set")
+	targetSdkVersion := flag.Uint("targetSdkVersion", 0, "The targetSdkVersion to set")
 	flag.Parse()
 	if len(flag.Args()) != 1 {
 		fmt.Fprintln(flag.CommandLine.Output(), "Error: File path is required.")
@@ -49,8 +49,8 @@ func main() {
 		versionCode: int32(*versionCode),
 		versionName: *versionName,
 		packageName: *packageName,
-		minSdkVersion: *minSdkVersion,
-		targetSdkVersion: *targetSdkVersion,
+		minSdkVersion: int32(*minSdkVersion),
+		targetSdkVersion: int32(*targetSdkVersion),
 	}
 
 	path := flag.Arg(0)
@@ -182,12 +182,12 @@ func updateManifest(path string, config *Config) {
 						case "minSdkVersion":
 							if config.minSdkVersion > 0 {
 								fmt.Println("Changing minSdkVersion from", attr.Value, "to", config.minSdkVersion)
-								attr.Value = strconv.Itoa(config.minSdkVersion)
+								attr.Value = strconv.Itoa(int(config.minSdkVersion))
 							}
 						case "targetSdkVersion":
 							if config.targetSdkVersion > 0 {
 								fmt.Println("Changing targetSdkVersion from", attr.Value, "to", config.targetSdkVersion)
-								attr.Value = strconv.Itoa(config.targetSdkVersion)
+								attr.Value = strconv.Itoa(int(config.targetSdkVersion))
 							}
 						}
 					}
