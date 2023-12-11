@@ -75,19 +75,33 @@ Change Android AAB/APK attributes like the versionCode and versionName. This too
 ## Usage
 
 ```bash
-# Change only versionCode
-androidmanifest-changer --versionCode 4 app.aab
+# Use the following order for entering attribute names, values, and the file name:
+   $ ./androidmanifest-changer [attribute] [value] [file_name]
+   Example: $ ./androidmanifest-changer -minSdkVersion 30 app.aab
+   Flags should precede the file name, and multiple flags can be used in a single command.
 
-# Change multiple values
-androidmanifest-changer \
-  --minSdkVersion 33 \
-  --versionCode 4 \
-  --versionName 1.0.2 \
-  --package com.some.app \
-  app.aab
+# List current attribute values in an AAB or APK file
+   $ ./androidmanifest-changer -list app.aab
+   Listing attributes for app.aab
+   minSdkVersion: 29
+   targetSdkVersion: 35
+   Package name: potato.dancer
+   versionCode: 10299
+   versionName: potato
+
+# Change a single attribute value in an AAB or APK file
+   $ ./androidmanifest-changer -versionCode 4 app.aab
+
+# Change multiple attribute values in an AAB or APK file
+   $ ./androidmanifest-changer \
+     -minSdkVersion 33 \
+     -versionCode 4 \
+     -versionName 1.0.2 \
+     -package com.some.app \
+     app.aab
 ```
 
-This will rewrite the given aab/apk with the new values.
+Running these commands will rewrite the given aab/apk with the new values.
 
 
 ## Requirements
