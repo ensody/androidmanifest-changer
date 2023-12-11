@@ -1,17 +1,80 @@
 # androidmanifest-changer
 
-Change Android AAB/APK attributes like the versionCode and versionName. This tool modified the binary AndroidManifest.xml within AAB (Bundles) and APK files.
+Change Android AAB/APK attributes like the versionCode and versionName. This tool modifies the binary AndroidManifest.xml within AAB (Bundles) and APK files.
 
-## Supported attributes
 
-* minSdkVersion
-* versionCode
-* versionName
-* package
+## Supported Attributes
+
+**minSdkVersion**
+   - Integer specifying the minimum Android API level required for the app to run.
+   - Android system blocks installation on devices with API levels lower than this value.
+   - Default assumed value is "1" if not specified, implying compatibility with all Android versions.
+   - Not declaring this attribute can lead to app crashes on incompatible systems due to unavailable APIs.
+   - Critical to specify the correct minSdkVersion for app stability.
+   - See https://developer.android.com/guide/topics/manifest/uses-sdk-element for more information.
+
+
+**targetSdkVersion**
+   - Influences the runtime behavior of the app's native code.
+   - System applies behavior changes to apps with targetSdkVersion at or above the OS version introducing these changes.
+   - New apps should target the latest version; existing apps should update when feasible.
+   - Retrieve the targetSdkVersion at runtime with android_get_application_target_sdk_version() in API level 24 and later.
+   - See https://developer.android.com/ndk/guides/sdk-versions for more information.
+
+
+**versionCode**
+   - A positive integer that serves as the internal version number of the app.
+   - Used to differentiate between newer and older versions, with higher numbers indicating more recent versions.
+   - Not visible to users, as the versionName attribute is used for display.
+   - Prevents downgrading by blocking the installation of APKs with lower versionCodes than the one installed.
+   - Important to increment for each app update.
+   - Maximum allowable value on Google Play: 2100000000.
+   - Reuse of versionCode for Play Store uploads is not permitted.
+   - See https://developer.android.com/studio/publish/versioning for more information.
+
+
+**versionName**
+   - The version number shown to users, specified as a string.
+   - Flexible format, commonly used as <major>.<minor>.<point> or other version identifiers.
+   - The primary version identifier for end users.
+   - See https://developer.android.com/studio/publish/versioning for more information.
+
+
+**package**
+   - Represents the app's unique application ID, formatted as a Java package name.
+   - Can include uppercase and lowercase letters, numbers, and underscores, but must start with a letter.
+   - Modifying this value essentially creates a new application, impacting updates and data transfer.
+   - In AGP 7.3+, avoid setting this directly in the source manifest.
+   - See https://developer.android.com/guide/topics/manifest/manifest-element for more information.
+
+
+## Coming soon
+
+**compileSdkVersion**
+   - This property doesn't impact NDK builds as API availability for NDK is determined by minSdkVersion.
+   - In NDK, C++ symbols are resolved at library load time, unlike the lazy resolution in Java.
+   - Utilizing symbols not present in the minSdkVersion can lead to library loading failures on OS versions lacking the newer API.
+   - Recommended approach for new apps is to use the latest available version. For existing apps, update to the latest version as per development needs.
+   - See https://developer.android.com/ndk/guides/sdk-versions for more information.
+
+
+**compileSdkVersionCodename**
+   - Reflects the development codename of the Android framework used for compiling the app.
+   - Compile-time equivalent of Build.VERSION.CODENAME.
+   - See https://developer.android.com/reference/android/content/pm/ApplicationInfo#compileSdkVersionCodename for more information.
+
+
+**platformBuildVersionCode**
+   - Description unavailable.
+
+
+**platformBuildVersionName**
+   - Description unavailable.
+
 
 ## Usage
 
-```
+```bash
 # Change only versionCode
 androidmanifest-changer --versionCode 4 app.aab
 
@@ -25,6 +88,7 @@ androidmanifest-changer \
 ```
 
 This will rewrite the given aab/apk with the new values.
+
 
 ## Requirements
 
