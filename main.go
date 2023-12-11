@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	tmpDir          = "/tmp"
-	namespace       = "http://schemas.android.com/apk/res/android"
+	tmpDir		  = "/tmp"
+	namespace	   = "http://schemas.android.com/apk/res/android"
 	versionCodeAttr = "versionCode"
 	versionNameAttr = "versionName"
 )
@@ -34,17 +34,52 @@ type Config struct {
 }
 
 func main() {
-	versionCode := flag.Uint("versionCode", 0, "The versionCode to set")
-	versionName := flag.String("versionName", "", "The versionName to set")
-	packageName := flag.String("package", "", "The package name to set")
-	minSdkVersion := flag.Uint("minSdkVersion", 0, "The minSdkVersion to set")
-	targetSdkVersion := flag.Uint("targetSdkVersion", 0, "The targetSdkVersion to set")
+	// Define flags
+	versionCode := flag.Uint("versionCode", 0, "Set the application's version code. [uint]")
+	versionName := flag.String("versionName", "", "Set the application's version name. [string]")
+	packageName := flag.String("package", "", "Set the application's package name. [string]")
+	minSdkVersion := flag.Uint("minSdkVersion", 0, "Set the minimum SDK version. [uint]")
+	targetSdkVersion := flag.Uint("targetSdkVersion", 0, "Set the target SDK version. [uint]")
+	list := flag.Bool("list", false, "List current values of versionCode, versionName, packageName, minSdkVersion, and targetSdkVersion. [bool]")
+
+	// Custom usage function to format the help message
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
+		fmt.Fprintln(flag.CommandLine.Output(), "  -list")
+		fmt.Fprintln(flag.CommandLine.Output(), "\tList current values of versionCode, versionName, packageName, minSdkVersion, and targetSdkVersion.")
+		fmt.Fprintln(flag.CommandLine.Output(), "  -minSdkVersion [uint]")
+		fmt.Fprintln(flag.CommandLine.Output(), "\tSet the minimum SDK version.")
+		fmt.Fprintln(flag.CommandLine.Output(), "  -package [string]")
+		fmt.Fprintln(flag.CommandLine.Output(), "\tSet the application's package name.")
+		fmt.Fprintln(flag.CommandLine.Output(), "  -targetSdkVersion [uint]")
+		fmt.Fprintln(flag.CommandLine.Output(), "\tSet the target SDK version.")
+		fmt.Fprintln(flag.CommandLine.Output(), "  -versionCode [uint]")
+		fmt.Fprintln(flag.CommandLine.Output(), "\tSet the application's version code.")
+		fmt.Fprintln(flag.CommandLine.Output(), "  -versionName [string]")
+		fmt.Fprintln(flag.CommandLine.Output(), "\tSet the application's version name.")
+		fmt.Fprintln(flag.CommandLine.Output(), "\nProvide the path to an APK, AAB, or AndroidManifest.xml file as the last argument.")
+	}
+
 	flag.Parse()
+
+	// Check if list flag is set
+	if *list {
+		if len(flag.Args()) != 1 {
+			fmt.Fprintln(flag.CommandLine.Output(), "Error: File path is required.")
+			flag.Usage()
+			os.Exit(2)
+		}
+		path := flag.Arg(0)
+		listAttributes(path)
+		return
+	}
+
 	if len(flag.Args()) != 1 {
 		fmt.Fprintln(flag.CommandLine.Output(), "Error: File path is required.")
 		flag.Usage()
 		os.Exit(2)
 	}
+
 	config := &Config{
 		versionCode: int32(*versionCode),
 		versionName: *versionName,
@@ -160,6 +195,79 @@ func findFile(r *zip.ReadCloser, name string) *zip.File {
 		return f
 	}
 	return nil
+}
+
+func listAttributes(path string) {
+	if strings.HasSuffix(path, ".apk") || strings.HasSuffix(path, ".aab") {
+		fmt.Println("Listing attributes for", path)
+		listAttributesInZip(path)
+	} else {
+		fmt.Println("Listing attributes for AndroidManifest.xml")
+		printManifestAttributes(path)
+	}
+}
+
+func listAttributesInZip(path string) {
+	manifest, err := ioutil.TempFile(tmpDir, "AndroidManifest.*.xml")
+	if err != nil {
+		log.Fatalln("Failed creating temp file:", err)
+	}
+	defer os.Remove(manifest.Name())
+
+	var manifestPath string
+	if strings.HasSuffix(path, ".apk") {
+		manifestPath = "AndroidManifest.xml"
+	} else { // .aab
+		manifestPath = "base/manifest/AndroidManifest.xml"
+	}
+
+	extractFromZip(path, manifestPath, manifest)
+	printManifestAttributes(manifest.Name())
+}
+
+func printManifestAttributes(path string) {
+	in, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatalln("Error reading file:", err)
+	}
+
+	xmlNode := &XmlNode{}
+	if err := proto.Unmarshal(in, xmlNode); err != nil {
+		log.Fatalln("Failed to parse manifest:", err)
+	}
+
+	for _, node := range xmlNode.GetElement().GetChild() {
+		if elem, ok := node.GetNode().(*XmlNode_Element); ok {
+			element := elem.Element
+			if element.GetName() == "uses-sdk" {
+				for _, attr := range element.GetAttribute() {
+					if attr.GetNamespaceUri() == namespace {
+						switch attr.GetName() {
+						case "minSdkVersion":
+							fmt.Println("minSdkVersion:", attr.Value)
+						case "targetSdkVersion":
+							fmt.Println("targetSdkVersion:", attr.Value)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for _, attr := range xmlNode.GetElement().GetAttribute() {
+		if attr.GetNamespaceUri() == "" && attr.GetName() == "package" {
+			fmt.Println("Package name:", attr.Value)
+		}
+		if attr.GetNamespaceUri() != namespace {
+			continue
+		}
+		switch attr.GetName() {
+		case versionCodeAttr:
+			fmt.Println("versionCode:", attr.Value)
+		case versionNameAttr:
+			fmt.Println("versionName:", attr.Value)
+		}
+	}
 }
 
 func updateManifest(path string, config *Config) {
