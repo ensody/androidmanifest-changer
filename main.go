@@ -69,15 +69,10 @@ func main() {
 			flag.Usage()
 			os.Exit(2)
 		}
+		
 		path := flag.Arg(0)
 		listAttributes(path)
 		return
-	}
-
-	if len(flag.Args()) != 1 {
-		fmt.Fprintln(flag.CommandLine.Output(), "Error: File path is required.")
-		flag.Usage()
-		os.Exit(2)
 	}
 
 	config := &Config{
@@ -88,7 +83,7 @@ func main() {
 		targetSdkVersion: int32(*targetSdkVersion),
 	}
 
-	path := flag.Arg(0)
+	//path := flag.Arg(0)
 
 	if strings.HasSuffix(path, ".apk") {
 		updateApk(path, config)
@@ -153,8 +148,7 @@ func addToZip(zipPath string, name string, source *os.File) {
 	io.Copy(f, source)
 
 	absZipPath, err := filepath.Abs(zipPath)
-	if err != nil {
-		log.Fatal(err)
+	if err != nil {10212.aab.out		log.Fatal(err)
 	}
 	cmd := exec.Command("zip", absZipPath, name)
 	cmd.Dir = manifestDir
@@ -199,10 +193,8 @@ func findFile(r *zip.ReadCloser, name string) *zip.File {
 
 func listAttributes(path string) {
 	if strings.HasSuffix(path, ".apk") || strings.HasSuffix(path, ".aab") {
-		fmt.Println("Listing attributes for", path)
 		listAttributesInZip(path)
 	} else {
-		fmt.Println("Listing attributes for AndroidManifest.xml")
 		printManifestAttributes(path)
 	}
 }
@@ -216,7 +208,7 @@ func listAttributesInZip(path string) {
 
 	var manifestPath string
 	if strings.HasSuffix(path, ".apk") {
-		manifestPath = "AndroidManifest.xml"
+		manifestPath = "10212.aab.out/unknown/base/manifest/AndroidManifest.xml"
 	} else { // .aab
 		manifestPath = "base/manifest/AndroidManifest.xml"
 	}
