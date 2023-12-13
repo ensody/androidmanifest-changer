@@ -48,30 +48,6 @@ Change Android AAB/APK attributes like the versionCode and versionName. This too
    - See https://developer.android.com/guide/topics/manifest/manifest-element for more information.
 
 
-## Coming soon
-
-**compileSdkVersion**
-   - This property doesn't impact NDK builds as API availability for NDK is determined by minSdkVersion.
-   - In NDK, C++ symbols are resolved at library load time, unlike the lazy resolution in Java.
-   - Utilizing symbols not present in the minSdkVersion can lead to library loading failures on OS versions lacking the newer API.
-   - Recommended approach for new apps is to use the latest available version. For existing apps, update to the latest version as per development needs.
-   - See https://developer.android.com/ndk/guides/sdk-versions for more information.
-
-
-**compileSdkVersionCodename**
-   - Reflects the development codename of the Android framework used for compiling the app.
-   - Compile-time equivalent of Build.VERSION.CODENAME.
-   - See https://developer.android.com/reference/android/content/pm/ApplicationInfo#compileSdkVersionCodename for more information.
-
-
-**platformBuildVersionCode**
-   - Description unavailable.
-
-
-**platformBuildVersionName**
-   - Description unavailable.
-
-
 ## Usage
 
 ```bash
