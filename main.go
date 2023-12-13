@@ -254,14 +254,14 @@ func printManifestAttributes(path string) {
 			continue
 		}
 		switch attr.GetName() {
-		case versionCodeAttr:
-			fmt.Println("versionCode:", attr.Value)
-		case versionNameAttr:
-			fmt.Println("versionName:", attr.Value)
+			case versionCodeAttr:
+				fmt.Println("versionCode:", attr.Value)
+			case versionNameAttr:
+				fmt.Println("versionName:", attr.Value)
+			}	
 		}
 	}
 }
-
 func updateManifest(path string, config *Config) {
 	in, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -277,17 +277,19 @@ func updateManifest(path string, config *Config) {
 			element := elem.Element
 			if element.GetName() == "uses-sdk" {
 				for _, attr := range element.GetAttribute() {
-					if attr.GetNamespaceUri() == "http://schemas.android.com/apk/res/android" {
-						switch attr.GetName() {
-						case "minSdkVersion":
-							if config.minSdkVersion > 0 {
-								fmt.Println("Changing minSdkVersion from", attr.Value, "to", config.minSdkVersion)
-								attr.Value = strconv.Itoa(int(config.minSdkVersion))
+					if attr.GetNamespaceUri() != namespace {
+						continue
+							switch attr.GetName() {
+							case "minSdkVersion":
+								if config.minSdkVersion > 0 {
+									fmt.Println("Changing minSdkVersion from", attr.Value, "to", config.minSdkVersion)
+									attr.Value = strconv.Itoa(int(config.minSdkVersion))
 							}
-						case "targetSdkVersion":
-							if config.targetSdkVersion > 0 {
-								fmt.Println("Changing targetSdkVersion from", attr.Value, "to", config.targetSdkVersion)
-								attr.Value = strconv.Itoa(int(config.targetSdkVersion))
+							case "targetSdkVersion":
+								if config.targetSdkVersion > 0 {
+									fmt.Println("Changing targetSdkVersion from", attr.Value, "to", config.targetSdkVersion)
+									attr.Value = strconv.Itoa(int(config.targetSdkVersion))
+								}
 							}
 						}
 					}
