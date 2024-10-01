@@ -18,11 +18,12 @@ import (
 )
 
 const (
-	tmpDir          = "/tmp"
 	namespace       = "http://schemas.android.com/apk/res/android"
 	versionCodeAttr = "versionCode"
 	versionNameAttr = "versionName"
 )
+
+var tmpDir = os.TempDir()
 
 type Config struct {
 	versionCode int32
